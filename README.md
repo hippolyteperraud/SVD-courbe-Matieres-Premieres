@@ -4,7 +4,7 @@ Application de la **décomposition en valeurs singulières (SVD)** à la courbe 
 8 échéances, qui bougent presque ensemble, se ramènent à **3 facteurs** (niveau, pente, courbure).
 
 Le projet télécharge les contrats sur Yahoo Finance, calcule la SVD des rendements journaliers, trace les figures et
-écrit les chiffres de l'analyse dans un fichier JSON. Une note d'analyse de 5 pages (LaTeX) présente les résultats
+écrit les chiffres de l'analyse dans un fichier JSON. Une note d'analyse de 5 pages (PDF) présente les résultats
 et leurs limites : [`note/note_svd_wti.pdf`](note/note_svd_wti.pdf).
 
 ## Résultats
@@ -61,7 +61,7 @@ src/svdcurve/analysis.py  indicateurs de l'analyse
 src/svdcurve/plots.py     figures
 tests/                    tests unitaires
 results/                  figures et resultats.json
-note/                     note d'analyse (LaTeX)
+note/                     note d'analyse (PDF ; source LaTeX : note_svd_wti.tex)
 ```
 
 ## Limites

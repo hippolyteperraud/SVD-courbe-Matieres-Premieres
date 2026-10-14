@@ -4,7 +4,7 @@
     python run_analysis.py            # télécharge les contrats (quelques minutes) puis trace les figures
     python run_analysis.py --reuse    # réutilise le dernier téléchargement (data/contrats_wti.csv)
 
-Résultats dans ``output/`` : ``figures/*.png`` et ``resultats.json``.
+Résultats dans ``results/`` : ``figures/*.png`` et ``resultats.json``.
 """
 
 from __future__ import annotations
@@ -22,7 +22,7 @@ from svdcurve.data import build_curve_panel, download_yahoo, load_contracts_csv,
 from svdcurve.plots import make_all_figures  # noqa: E402
 
 CACHE = ROOT / "data" / "contrats_wti.csv"
-OUT = ROOT / "output"
+OUT = ROOT / "results"
 
 
 def main() -> None:

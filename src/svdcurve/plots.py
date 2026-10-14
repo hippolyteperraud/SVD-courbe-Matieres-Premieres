@@ -92,10 +92,14 @@ def figure_curves(result: AnalysisResult, path: Path) -> Path:
     _setup_style()
     panel, shape = result.panel, result.metrics["curve_shape"]
     ranks = np.arange(1, panel.prices.shape[1] + 1)
+    slopes = shape["slope_pct"]  # ln(prix rang N / prix rang 1), en %
+    # « Contango » seulement si la courbe est réellement croissante ; sinon c'est la courbe la plus plate.
+    flat_label = "Contango" if slopes["contango"] > 0 else "Courbe la plus plate"
+    steep_label = "Backwardation" if slopes["backwardation"] < 0 else "Pente la plus basse"
     spec = [
-        ("contango", "Contango", FACTOR_COLORS["Niveau"], "o"),
+        ("contango", flat_label, FACTOR_COLORS["Niveau"], "o"),
         ("median", "Pente médiane", INK2, "s"),
-        ("backwardation", "Backwardation", FACTOR_COLORS["Pente"], "^"),
+        ("backwardation", steep_label, FACTOR_COLORS["Pente"], "^"),
     ]
     fig, ax = plt.subplots(figsize=(7.2, 3.9))
     items = []
@@ -147,7 +151,7 @@ def figure_variance(result: AnalysisResult, path: Path) -> Path:
     ax2.semilogy(idx[above], s[above], "o", color=FACTOR_COLORS["Niveau"], label="Retenues (au-dessus du seuil)")
     ax2.semilogy(idx[~above], s[~above], "o", color="#8c97a6", label="Écartées (bruit)")
     ax2.axhline(tau, color=INK, linestyle="--", linewidth=1.4)
-    ax2.annotate(f"seuil τ = {fr(tau, 2)}", (len(idx), tau), textcoords="offset points", xytext=(0, 5), ha="right", fontsize=9, color=INK)
+    ax2.annotate(f"seuil τ = {fr(tau, 4)}", (len(idx), tau), textcoords="offset points", xytext=(0, 5), ha="right", fontsize=9, color=INK)
     ax2.set_xticks(idx)
     ax2.grid(axis="x", visible=False)
     ax2.set_xlabel("Indice k de la valeur singulière")
@@ -249,6 +253,51 @@ def figure_factor_volatility(result: AnalysisResult, path: Path, window: int = 6
     return _finish(fig, result, path)
 
 
+def figure_linkedin(result: AnalysisResult, path: Path) -> Path:
+    """Visuel unique pour LinkedIn (1200 x 675 px) : titre, facteurs et variance expliquée."""
+    _setup_style()
+    plt.rcParams.update({"font.size": 12, "legend.fontsize": 11})
+    m = result.metrics
+    loadings = np.array(m["loadings"])
+    ranks = np.arange(1, loadings.shape[1] + 1)
+    top3 = 100 * sum(m["variance_ratio"][:3])
+    shares = [100 * r for r in m["variance_ratio"][:3]] + [100 - top3]
+
+    fig = plt.figure(figsize=(12, 6.75), dpi=100)
+    fig.text(0.05, 0.93, f"3 facteurs expliquent {fr(top3)} % des mouvements", fontsize=23, weight="bold", color=INK, va="top")
+    fig.text(0.05, 0.865, "de la courbe à terme du pétrole WTI (12 échéances), par décomposition en valeurs singulières", fontsize=13, color=INK2, va="top")
+    ax = fig.add_axes([0.07, 0.17, 0.52, 0.60])
+    items = []
+    for i, name in enumerate(FACTOR_NAMES):
+        ax.plot(ranks, loadings[i], color=FACTOR_COLORS[name], marker=FACTOR_MARKERS[name], linewidth=2.6, markersize=7)
+        items.append((loadings[i, -1], name, FACTOR_COLORS[name]))
+    ax.axhline(0, color="#b9b8b3", linewidth=1.0)
+    ax.set_xlim(0.7, ranks[-1] + 3.0)
+    ax.set_xticks([1, 3, 6, 9, 12])
+    ax.grid(axis="x", visible=False)
+    ax.set_xlabel("Échéance du contrat (1 = la plus proche)")
+    ax.set_ylabel("Coefficient du facteur")
+    ax.yaxis.set_major_formatter(_fr_formatter(1))
+    fig.canvas.draw()
+    _direct_labels(ax, ranks[-1], items, dx=0.45, gap_fraction=0.09)
+
+    bx = fig.add_axes([0.73, 0.17, 0.24, 0.60])
+    labels = ["Niveau", "Pente", "Courbure", "Reste"]
+    colors = [FACTOR_COLORS["Niveau"], FACTOR_COLORS["Pente"], FACTOR_COLORS["Courbure"], NEUTRAL_BAR]
+    y = np.arange(len(labels))[::-1]
+    bx.barh(y, shares, height=0.58, color=colors)
+    for yi, share in zip(y, shares):
+        bx.text(share + 1.5, yi, f"{fr(share)} %", va="center", fontsize=12, color=INK)
+    bx.set_yticks(y, labels)
+    bx.set_xlim(0, 118)
+    bx.set_xticks([])
+    bx.grid(visible=False)
+    bx.spines[["left", "bottom"]].set_visible(False)
+    bx.tick_params(axis="y", length=0)
+    bx.set_title("Part de la variance", fontsize=12)
+    data = m["data"]
+    fig.text(0.05, 0.03, f"{m['n_obs']} rendements journaliers, {data['first_date']} → {data['last_date']}. Source des prix : Yahoo Finance.", fontsize=10, color=INK2)
+    return _finish(fig, result, path)
 
 
 def make_all_figures(result: AnalysisResult, out_dir: Path) -> dict[str, Path]:
@@ -259,4 +308,5 @@ def make_all_figures(result: AnalysisResult, out_dir: Path) -> dict[str, Path]:
         "factors": figure_factors(result, out_dir / "fig3_facteurs.png"),
         "reconstruction": figure_reconstruction(result, out_dir / "fig4_reconstruction.png"),
         "volatility": figure_factor_volatility(result, out_dir / "fig5_volatilite.png"),
+        "linkedin": figure_linkedin(result, out_dir / "linkedin_visuel.png"),
     }

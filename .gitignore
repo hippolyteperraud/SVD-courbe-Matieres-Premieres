@@ -2,7 +2,12 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .venv/
-output/
-data/contrats_wti.csv
+
+# Données Yahoo Finance : non redistribuées
+data/
+
+# Fichiers intermédiaires LaTeX
 *.aux
 *.log
+*.out
+*.toc

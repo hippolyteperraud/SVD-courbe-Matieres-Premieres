@@ -5,7 +5,7 @@ Application de la **décomposition en valeurs singulières (SVD)** à la courbe 
 
 Le projet télécharge les contrats sur Yahoo Finance, calcule la SVD des rendements journaliers, trace les figures et
 écrit les chiffres de l'analyse dans un fichier JSON. Une note d'analyse de 5 pages (LaTeX) présente les résultats
-et leurs limites : [`note/note_svd_wti.tex`](note/note_svd_wti.tex).
+et leurs limites : [`note/note_svd_wti.pdf`](note/note_svd_wti.pdf).
 
 ## Résultats
 
